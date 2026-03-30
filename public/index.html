@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Container UI</title>
+<link rel="stylesheet" href="css/theme.css?v=16">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+</head>
+<body>
+
+<!-- Add connection form (overlay) -->
+<div class="add-form-overlay" id="addFormOverlay">
+  <div class="add-form-popup">
+    <h3>Add Connection</h3>
+    <input id="hostInput" placeholder="host" value="ssh.containers.adom.inc">
+    <input id="portInput" placeholder="port" value="2222" type="number">
+    <input id="userInput" placeholder="username">
+    <div class="add-form-actions">
+      <button class="btn" onclick="shell.connectAndSave()">Connect</button>
+      <button class="btn secondary" onclick="shell.hideAddForm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="content-area">
+    <div class="tiling-root" id="tilingRoot"></div>
+  </div>
+</div>
+
+<!-- Shared overlays -->
+<div class="ctx-menu" id="ctxMenu"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+
+<!-- App scripts -->
+<script src="js/event-bus.js?v=16"></script>
+<script src="js/tiling.js?v=16"></script>
+<script src="js/shell.js?v=16"></script>
+<script src="js/apps/explorer.js?v=16"></script>
+<script src="js/apps/previewer.js?v=16"></script>
+<script src="js/apps/editor.js?v=16"></script>
+<script src="js/apps/terminal.js?v=16"></script>
+
+<script>
+  // Boot the shell
+  shell.init();
+</script>
+</body>
+</html>

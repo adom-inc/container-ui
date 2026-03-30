@@ -1,0 +1,15 @@
+{
+  "name": "container-ui",
+  "version": "1.0.0",
+  "description": "Container User Interface — file explorer, terminal, previewer, and editor",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "ssh2": "^1.17.0",
+    "ws": "^8.18.0",
+    "node-pty": "^1.0.0"
+  }
+}
