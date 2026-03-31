@@ -42,17 +42,8 @@ async function discoverContainers() {
     const res = await fetch('https://carbon.adom.inc/containers/' + slugMatch[1], {
       headers: { 'X-Api-Key': apiKey }
     });
-    const current = await res.json();
-    if (current.ssh_credentials) {
-      knownContainers.set('this-container', {
-        name: 'this-container',
-        host: 'ssh.containers.adom.inc',
-        port: 2222,
-        username: current.ssh_credentials.username,
-        image: current.image_name,
-        hostname: current.default_hostname
-      });
-    }
+    // Container info available for future use but not added to the list
+    // since we already have local filesystem access
   } catch (e) {
     console.error('Discovery error:', e.message);
   }
