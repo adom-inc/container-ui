@@ -678,6 +678,52 @@ app.get('/api/discovered', (req, res) => {
   res.json(list);
 });
 
+// ── Server-side saved connections (synced to browser via /api/connections) ──
+const CONNECTIONS_FILE = path.join(__dirname, '.connections.json');
+
+function loadServerConnections() {
+  try { return JSON.parse(fs.readFileSync(CONNECTIONS_FILE, 'utf8')); }
+  catch { return []; }
+}
+
+function saveServerConnections(conns) {
+  fs.writeFileSync(CONNECTIONS_FILE, JSON.stringify(conns, null, 2));
+}
+
+app.get('/api/connections', (req, res) => {
+  res.json(loadServerConnections());
+});
+
+app.post('/api/connections', async (req, res) => {
+  const { host, port, username, label } = req.body;
+  if (!host || !username) return res.status(400).json({ error: 'host and username required' });
+  const conn = { host, port: port || 2222, username, label: label || username };
+
+  // Test the connection first
+  try {
+    await sshExec(conn, 'whoami');
+  } catch (e) {
+    return res.status(502).json({ error: 'SSH connection failed: ' + e.message });
+  }
+
+  const conns = loadServerConnections();
+  const exists = conns.find(c => c.host === conn.host && c.username === conn.username && c.port === conn.port);
+  if (!exists) {
+    conns.push(conn);
+    saveServerConnections(conns);
+  }
+  res.json({ ok: true, connection: conn, total: conns.length });
+});
+
+app.delete('/api/connections', (req, res) => {
+  const { host, username, port } = req.body;
+  if (!host || !username) return res.status(400).json({ error: 'host and username required' });
+  let conns = loadServerConnections();
+  conns = conns.filter(c => !(c.host === host && c.username === username && (c.port || 2222) === (port || 2222)));
+  saveServerConnections(conns);
+  res.json({ ok: true, total: conns.length });
+});
+
 app.get('/api/pool-status', (req, res) => {
   const status = {};
   for (const [key, entry] of pool) {

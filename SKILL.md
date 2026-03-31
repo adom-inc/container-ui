@@ -151,6 +151,87 @@ All POST with JSON body containing `connection` object + params.
 | `/api/move` | Move or copy files |
 | `/api/search` | Search files by name |
 | `/api/containers` | List discovered containers |
+| `/api/connections` | GET: list saved connections, POST: add, DELETE: remove |
+
+## Adding SSH Connections (AI / CLI)
+
+Container UI has a server-side connections API so an AI agent or script can add, list, and remove SSH connections without needing browser access. Connections added via the API are automatically synced to the browser UI on page load.
+
+Connections are stored in `.connections.json` (gitignored) and require a valid SSH key at `~/.ssh/id_ed25519` on the server.
+
+### Add a connection
+
+```bash
+# Add a connection (tests SSH connectivity before saving)
+curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"host":"ssh.containers.adom.inc","port":2222,"username":"noah","label":"Noah Dev"}' \
+  http://127.0.0.1:8850/api/connections
+```
+
+Returns `{"ok":true,"connection":{...},"total":N}` on success, or `502` if SSH fails.
+
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `host` | yes | — | SSH hostname |
+| `port` | no | `2222` | SSH port |
+| `username` | yes | — | SSH username |
+| `label` | no | username | Display name in the UI dropdown |
+
+### List connections
+
+```bash
+curl -s http://127.0.0.1:8850/api/connections
+```
+
+Returns an array of `{host, port, username, label}` objects.
+
+### Remove a connection
+
+```bash
+curl -s -X DELETE \
+  -H "Content-Type: application/json" \
+  -d '{"host":"ssh.containers.adom.inc","username":"noah","port":2222}' \
+  http://127.0.0.1:8850/api/connections
+```
+
+### Bulk add from Adom container list
+
+An AI can discover containers via the Carbon API and add them all:
+
+```bash
+API_KEY=$(cat /var/run/adom/api-key)
+SLUG=$(echo "$VSCODE_PROXY_URI" | sed 's|.*-\([^.]*\)\.adom\.cloud.*|\1|')
+
+# Get all containers in the org
+CONTAINERS=$(curl -s -H "X-Api-Key: $API_KEY" "https://carbon.adom.inc/containers")
+
+# Add each container as a connection
+python3 -c "
+import json, subprocess, sys
+containers = json.loads('''$CONTAINERS''')
+for c in containers:
+    creds = c.get('ssh_credentials', {})
+    if not creds.get('username'): continue
+    data = json.dumps({
+        'host': 'ssh.containers.adom.inc',
+        'port': 2222,
+        'username': creds['username'],
+        'label': c.get('default_hostname', creds['username'])
+    })
+    r = subprocess.run(['curl','-s','-X','POST','-H','Content-Type: application/json','-d',data,'http://127.0.0.1:8850/api/connections'], capture_output=True, text=True)
+    result = json.loads(r.stdout)
+    name = c.get('default_hostname', creds['username'])
+    if result.get('ok'):
+        print(f'  Added: {name}')
+    elif 'failed' in result.get('error',''):
+        print(f'  Skipped (unreachable): {name}')
+"
+```
+
+### Verify from the browser
+
+After adding connections via the API, refresh the Container UI page. New connections appear in the toolbar dropdown automatically — no manual entry needed.
 
 ## Dependencies
 

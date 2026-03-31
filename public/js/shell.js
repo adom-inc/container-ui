@@ -439,17 +439,20 @@ const shell = (function () {
     // Close context menu on click
     document.addEventListener('click', hideCtxMenu);
 
-    // Auto-add discovered containers
-    apiGet('discovered').then(list => {
-      for (const c of list) {
-        const exists = savedConnections.find(s => s.host === c.host && s.username === c.username && s.port === c.port);
+    // Sync server-side connections + discovered containers
+    Promise.all([
+      apiGet('connections').catch(() => []),
+      apiGet('discovered').catch(() => [])
+    ]).then(([serverConns, discovered]) => {
+      for (const c of [...serverConns, ...discovered]) {
+        const exists = savedConnections.find(s => s.host === c.host && s.username === c.username && (s.port || 2222) === (c.port || 2222));
         if (!exists) {
-          savedConnections.push({ host: c.host, port: c.port, username: c.username, label: c.name || c.username });
+          savedConnections.push({ host: c.host, port: c.port || 2222, username: c.username, label: c.label || c.name || c.username });
           localStorage.setItem('cui-connections', JSON.stringify(savedConnections));
         }
       }
       renderConnections();
-    }).catch(() => {});
+    });
 
     // Poll connection status
     setInterval(pollPoolStatus, 3000);
