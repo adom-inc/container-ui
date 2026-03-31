@@ -80,15 +80,43 @@
 
     _render() {
       this.container.innerHTML = `
-        <div class="breadcrumb" id="ex-breadcrumb"></div>
-        <div class="search-bar">
-          <input id="ex-searchInput" placeholder="Search files..." >
-          <button class="btn secondary" id="ex-searchBtn">Search</button>
-          <button class="btn secondary" id="ex-refreshBtn" title="Refresh">&#8635;</button>
+        <div class="explorer-toolbar">
+          <div class="breadcrumb" id="ex-breadcrumb"></div>
+          <input id="ex-searchInput" class="toolbar-search" placeholder="Search..." >
+          <button class="btn secondary btn-sm" id="ex-searchBtn">Search</button>
+          <button class="btn secondary btn-sm" id="ex-refreshBtn" title="Refresh">&#8635;</button>
+          <select class="conn-select" id="ex-connSelect"></select>
         </div>
         <div class="file-area" id="ex-fileArea">
           <div class="empty"><span class="icon">&#128268;</span><p>Connect to a container to browse files</p></div>
         </div>`;
+      this._updateConnSelect();
+    }
+
+    _updateConnSelect() {
+      const sel = this.container.querySelector('#ex-connSelect');
+      if (!sel) return;
+      sel.innerHTML = '';
+      const conn = shell.conn;
+      // Local option
+      const localOpt = document.createElement('option');
+      localOpt.value = '__local__';
+      localOpt.textContent = 'Local';
+      if (conn && conn.local) localOpt.selected = true;
+      sel.appendChild(localOpt);
+      // Saved connections
+      (shell.savedConnections || []).forEach((c, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = c.label || c.username;
+        if (conn && !conn.local && conn.host === c.host && conn.username === c.username) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      // Add connection option
+      const addOpt = document.createElement('option');
+      addOpt.value = '__add__';
+      addOpt.textContent = '+ Add Connection';
+      sel.appendChild(addOpt);
     }
 
     _bindEvents() {
@@ -97,8 +125,17 @@
       this.container.querySelector('#ex-searchBtn').addEventListener('click', () => this.doSearch());
       this.container.querySelector('#ex-refreshBtn').addEventListener('click', () => { if (shell.path) this.browse(shell.path); });
 
+      // Connection dropdown
+      this.container.querySelector('#ex-connSelect').addEventListener('change', e => {
+        const val = e.target.value;
+        if (val === '__add__') { shell.showAddForm(); this._updateConnSelect(); }
+        else if (val === '__local__') shell.connectLocal();
+        else shell.loadConnection(parseInt(val));
+      });
+
       // Connection change
       this._unsub = bus.on('conn:change', ({ connection }) => {
+        this._updateConnSelect();
         this.browse('/home/adom');
       });
 

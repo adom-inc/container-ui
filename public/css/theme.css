@@ -247,11 +247,15 @@ body {
   flex-shrink: 0;
 }
 
+.explorer-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 8px; background: var(--bg2);
+  border-bottom: 1px solid var(--border-muted);
+  flex-shrink: 0; min-height: 32px;
+}
 .breadcrumb {
   display: flex; align-items: center; gap: 2px;
-  padding: 6px 12px; background: var(--bg2);
-  border-bottom: 1px solid var(--border-muted);
-  flex-shrink: 0; overflow-x: auto; white-space: nowrap;
+  flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap;
 }
 .breadcrumb .crumb {
   color: var(--accent); cursor: pointer; padding: 2px 4px;
@@ -262,17 +266,25 @@ body {
 .breadcrumb .crumb.drop-target { background: var(--accent-muted); outline: 1px dashed var(--accent); outline-offset: 1px; }
 .breadcrumb .sep { color: var(--muted); font-size: 10px; }
 
-.search-bar {
-  display: flex; gap: 6px; padding: 6px 12px;
-  background: var(--bg2); border-bottom: 1px solid var(--border-muted); flex-shrink: 0;
-}
-.search-bar input {
-  flex: 1; background: var(--bg); border: 1px solid var(--border);
-  color: var(--text); padding: 4px 10px;
+.toolbar-search {
+  width: 120px; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); padding: 3px 8px;
   border-radius: var(--radius); font-size: 12px; font-family: inherit;
+  transition: border-color 0.15s, width 0.2s;
+}
+.toolbar-search:focus { outline: none; border-color: var(--accent); width: 180px; }
+
+.btn-sm { padding: 3px 8px; font-size: 11px; }
+
+.conn-select {
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); padding: 3px 6px;
+  border-radius: var(--radius); font-size: 11px; font-family: inherit;
+  cursor: pointer; max-width: 140px;
   transition: border-color 0.15s;
 }
-.search-bar input:focus { outline: none; border-color: var(--accent); }
+.conn-select:focus { outline: none; border-color: var(--accent); }
+.conn-select option { background: var(--bg2); color: var(--text); }
 
 .file-list { flex: 1; overflow-y: auto; }
 .file-list table { width: 100%; border-collapse: collapse; }
